@@ -168,6 +168,9 @@ struct ContentView: View {
             // The side panes slide over the page and never move the text.
             let fill = max(geometry.size.width - 2 * min(max(geometry.size.width * 0.05, 16), 96), 280)
             let columnWidth = limitLineWidth ? min(markdownLens ? lineWidth + 20 : lineWidth, fill) : fill
+            // The editor also covers the right margin, so its scroller sits at the window's edge, clear of full-width tables.
+            // The column itself stays where it was: the editor is right-aligned and the text wraps at columnWidth.
+            let rightMargin = max(0, (geometry.size.width - columnWidth) / 2)
             ZStack(alignment: .topLeading) {
                 page.ignoresSafeArea()
                 NativeEditor(text: $document.text, fileURL: fileURL, columnWidth: columnWidth, markdownLens: markdownLens, findQuery: showFind ? query : "", matchCase: matchCase, selectedRange: $selectedRange, textView: $textView, onType: {
@@ -197,8 +200,8 @@ struct ContentView: View {
                         scheduleHumanStamp()
                     }
                 }, onCodeCopied: { copied in showCopyNotice(.code, copied: copied) })
-                .frame(width: columnWidth)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(width: columnWidth + rightMargin)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
                 .padding(.top, 56 + tabBarInset)
 
                 if document.text.isEmpty {

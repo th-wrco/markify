@@ -121,10 +121,24 @@ import WebKit
         let html = """
         <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
         <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src data:">
-        <title>\(MarkdownHTML.escape(title))</title><style>\(Self.style)</style></head>
+        <title>\(MarkdownHTML.escape(title))</title><style>\(Self.style)body{font-family:\(Self.proseFontFamily())}</style></head>
         <body><main>\(body.body)</main></body></html>
         """
         return (html, title)
+    }
+
+    /// The prose font chosen in Markify's Settings as a CSS font-family list. The app's preferences are readable
+    /// from the sandbox through the shared-preference exception in QuickLook.entitlements.
+    nonisolated private static func proseFontFamily() -> String {
+        let chosen = UserDefaults(suiteName: "com.stephanepaquet.Markify")?.string(forKey: "proseFont") ?? "New York"
+        switch chosen {
+        case "New York": return #"ui-serif,"New York",Georgia,serif"#
+        case "SF Pro": return "system-ui,-apple-system,sans-serif"
+        default:
+            // A quoted CSS name: no characters that could end the string or the style element.
+            let name = chosen.filter { !"\"\\<>\n\r".contains($0) }
+            return "\"\(name)\",ui-serif,Georgia,serif"
+        }
     }
 
     nonisolated private static let style = """

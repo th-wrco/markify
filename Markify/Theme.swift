@@ -16,7 +16,12 @@ struct EditorTheme: Equatable {
         let size = size * scale
         var font = NSFont.systemFont(ofSize: size, weight: bold ? .bold : .regular)
         // New York is a system design, not a font that can be looked up by name.
-        if proseFont == "New York", let serif = font.fontDescriptor.withDesign(.serif), let design = NSFont(descriptor: serif, size: size) { font = design }
+        if proseFont == "New York", let serif = font.fontDescriptor.withDesign(.serif), let design = NSFont(descriptor: serif, size: size) {
+            font = design
+        } else if proseFont != "SF Pro", let family = NSFontManager.shared.font(withFamily: proseFont, traits: [], weight: 5, size: size) {
+            // Any other installed family (Charter, Georgia, Iowan Old Style…); SF Pro stays the system font.
+            font = bold ? adding(.bold, to: family) : family
+        }
         return italic ? adding(.italic, to: font) : font
     }
 

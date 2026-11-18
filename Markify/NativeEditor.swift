@@ -106,7 +106,10 @@ struct NativeEditor: NSViewRepresentable {
         editor.isAutomaticDashSubstitutionEnabled = false
         editor.drawsBackground = false
         editor.textContainerInset = NSSize(width: 0, height: 40)
-        editor.textContainer?.widthTracksTextView = true
+        // The text wraps at the column's width while the scroll view reaches on to the window's right edge
+        // (see ContentView), so the scroller sits in the margin instead of over the column's right edge.
+        editor.textContainer?.widthTracksTextView = false
+        editor.textContainer?.size = NSSize(width: columnWidth, height: CGFloat.greatestFiniteMagnitude)
         editor.isVerticallyResizable = true
         editor.isHorizontallyResizable = false
         editor.autoresizingMask = [.width]
@@ -140,6 +143,14 @@ struct NativeEditor: NSViewRepresentable {
         (editor as? MarkdownTextView)?.bundleRoot = bundleRoot
         (editor as? MarkdownTextView)?.linkTargets = linkTargets
         (editor as? MarkdownTextView)?.columnWidth = columnWidth
+        if let container = editor.textContainer {
+            if container.widthTracksTextView { container.widthTracksTextView = false }
+            if container.size.width != columnWidth {
+                container.size = NSSize(width: columnWidth, height: CGFloat.greatestFiniteMagnitude)
+                // A new width rewraps the text above a table, moving its rows.
+                (editor as? MarkdownTextView)?.scheduleTableHeightRefresh()
+            }
+        }
         (editor as? MarkdownTextView)?.rendered = !markdownLens
         (editor as? MarkdownTextView)?.theme = theme
         context.coordinator.parent = self

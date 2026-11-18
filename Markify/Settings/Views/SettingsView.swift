@@ -46,6 +46,10 @@ struct SettingsView: View {
 
     private enum Tab { case general, editor, appearance, search, intelligence, shortcuts, privacy }
     private var accent: Color { AccentChoice.color(accentColor) }
+    /// Installed font families for the prose font picker, without hidden system families and the two listed first.
+    private var installedFontFamilies: [String] {
+        NSFontManager.shared.availableFontFamilies.filter { !$0.hasPrefix(".") && $0 != "New York" && $0 != "SF Pro" }
+    }
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -193,6 +197,11 @@ struct SettingsView: View {
                 Picker("Prose font", selection: $proseFont) {
                     Text("New York").tag("New York")
                     Text("SF Pro").tag("SF Pro")
+                    Divider()
+                    // Every other font family installed on this Mac, including ones added in Font Book.
+                    ForEach(installedFontFamilies, id: \.self) { family in
+                        Text(family).tag(family)
+                    }
                 }
                 Picker("Markdown font", selection: $markdownFont) {
                     Text("SF Mono").tag("SF Mono")
